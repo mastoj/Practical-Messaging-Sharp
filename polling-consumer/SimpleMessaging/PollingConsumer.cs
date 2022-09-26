@@ -19,6 +19,24 @@ namespace SimpleMessaging
         
         public Task Run(CancellationToken ct)
         {
+            var task = Task.Factory.StartNew(() => {
+                {
+                    ct.ThrowIfCancellationRequested();
+                    using var channel = new DataTypeChannelConsumer<T>(_messageSerializer, _hostName);
+                    while (true)
+                    {
+                        var message = channel.Receive();
+                        if (message != null)
+                        {
+                            _messageHandler.Handle(message);
+                        }
+                        Task.Delay(1000);
+                        ct.ThrowIfCancellationRequested();
+                    }
+                }
+
+            }, ct);
+            return task;
             /*
              * TODO:
              * Create a Task that will

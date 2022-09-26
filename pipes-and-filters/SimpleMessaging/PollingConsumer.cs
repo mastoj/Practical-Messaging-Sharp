@@ -22,15 +22,13 @@ namespace SimpleMessaging
             var task = Task.Factory.StartNew(() =>
                 {
                     ct.ThrowIfCancellationRequested();
-                    using (var channel = new DataTypeChannelConsumer<T>(_messageSerializer, _hostName))
+                    using var channel = new DataTypeChannelConsumer<T>(_messageSerializer, _hostName);
+                    while (true)
                     {
-                        while (true)
-                        {
-                            var message = channel.Receive();
-                            _messageHandler.Handle(message);
-                            Task.Delay(1000, ct).Wait(ct); //yield
-                            ct.ThrowIfCancellationRequested();
-                        }
+                        var message = channel.Receive();
+                        _messageHandler.Handle(message);
+                        Task.Delay(1000, ct).Wait(ct); //yield
+                        ct.ThrowIfCancellationRequested();
                     }
                 }, ct
             );
